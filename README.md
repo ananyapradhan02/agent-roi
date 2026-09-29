@@ -36,12 +36,6 @@ Sit with an ops lead or finance person who has been pitched an agent recently. A
 2. "Look at the sensitivity table. At what automation rate or price does this flip to a kill?" (Do they find the break-even without explanation?)
 3. "Copy the memo and tell me where you would send it. What would you change before sending?"
 
-## what Ananya should decide after testing
-
-- If they reached a verdict in under ten minutes and would send the memo: build vendor pricing presets with source links and scenario sharing via URL next.
-- If they got stuck on inputs (usually automation rate or escalation time): add guided ranges and a "what vendors claim vs what pilots show" note before anything else.
-- If they did not trust the verdict: revisit the thresholds and add ramp-up months to the model.
-
 ## status
 
 v0.1 · 29.09.26
