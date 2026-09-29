@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>agent roi</title>
+  <meta name="description" content="A ten-minute calculator to justify or kill an AI agent purchase: payback, monthly savings, sensitivity, and a memo you can paste.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="app.css">
+  <script>
+    try { var t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <a class="wordmark" href="./">agent <em>roi</em></a>
+      <nav>
+        <a href="https://github.com/ananyapradhan02/agent-roi" target="_blank" rel="noopener">source</a>
+        <button class="pill theme-toggle" id="theme" type="button" aria-label="toggle theme">theme</button>
+      </nav>
+    </header>
+
+    <section class="section enter">
+      <h1>justify it or <em>kill it</em></h1>
+      <p class="dek">put in what the work costs today and what the agent will cost. in ten minutes you get payback, monthly savings, the range where the case breaks, and a memo to paste into the thread.</p>
+    </section>
+
+    <section class="section">
+      <div class="layout">
+        <form id="inputs" class="inputs" autocomplete="off" novalidate>
+          <p class="label">start from a preset</p>
+          <div class="row presets" id="presets"></div>
+          <p class="caption preset-note">presets are illustrative round numbers, not vendor quotes. replace every value with your own.</p>
+
+          <fieldset>
+            <legend>the work today</legend>
+            <div class="fields">
+              <div class="field">
+                <label for="currency">currency</label>
+                <select id="currency" name="currency">
+                  <option value="USD">usd ($)</option>
+                  <option value="INR">inr (₹)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="volume">tasks per month</label>
+                <input id="volume" name="volume" type="number" inputmode="decimal" min="0" step="100">
+              </div>
+              <div class="field">
+                <label for="handle">handle time per task (min)</label>
+                <input id="handle" name="handle" type="number" inputmode="decimal" min="0" step="0.5">
+              </div>
+              <div class="field">
+                <label for="rate">loaded cost per hour <span class="cur"></span></label>
+                <input id="rate" name="rate" type="number" inputmode="decimal" min="0" step="1">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>the agent</legend>
+            <div class="fields">
+              <div class="field">
+                <label for="automation">automation rate (%)</label>
+                <input id="automation" name="automation" type="number" inputmode="decimal" min="0" max="100" step="5">
+              </div>
+              <div class="field">
+                <label for="escalation">escalation handle time (min)</label>
+                <input id="escalation" name="escalation" type="number" inputmode="decimal" min="0" step="0.5">
+              </div>
+            </div>
+            <p class="caption">escalation time is what a person spends on a task the agent tried and handed back. it is often longer than today's handle time, because the easy ones are gone.</p>
+
+            <p class="sublabel">pricing model</p>
+            <div class="row" role="radiogroup" aria-label="pricing model">
+              <button type="button" class="pill" data-model="token" aria-pressed="true">token-based</button>
+              <button type="button" class="pill" data-model="resolution" aria-pressed="false">per resolution</button>
+            </div>
+
+            <div class="fields model-token">
+              <div class="field">
+                <label for="tokens">tokens per run</label>
+                <input id="tokens" name="tokens" type="number" inputmode="decimal" min="0" step="1000">
+              </div>
+              <div class="field">
+                <label for="ppm">price per million tokens <span class="cur"></span></label>
+                <input id="ppm" name="ppm" type="number" inputmode="decimal" min="0" step="0.5">
+              </div>
+              <div class="field">
+                <label for="overhead">overhead per run <span class="cur"></span></label>
+                <input id="overhead" name="overhead" type="number" inputmode="decimal" min="0" step="0.01">
+              </div>
+            </div>
+            <p class="caption model-token">token pricing is charged on every run, including the ones that end in escalation.</p>
+
+            <div class="fields model-resolution" hidden>
+              <div class="field">
+                <label for="perres">price per resolved task <span class="cur"></span></label>
+                <input id="perres" name="perres" type="number" inputmode="decimal" min="0" step="0.1">
+              </div>
+            </div>
+            <p class="caption model-resolution" hidden>per-resolution pricing is charged only on tasks the agent finishes.</p>
+
+            <div class="fields">
+              <div class="field">
+                <label for="platform">platform fee per month <span class="cur"></span></label>
+                <input id="platform" name="platform" type="number" inputmode="decimal" min="0" step="100">
+              </div>
+              <div class="field">
+                <label for="impl">one-time implementation <span class="cur"></span></label>
+                <input id="impl" name="impl" type="number" inputmode="decimal" min="0" step="1000">
+              </div>
+            </div>
+          </fieldset>
+        </form>
+
+        <div class="results" aria-live="polite">
+          <div class="panel">
+            <div class="panel-title"><span>the case</span><span class="meta" id="asof"></span></div>
+            <div class="panel-body">
+              <div class="verdict-row">
+                <span class="stamp" id="stamp">marginal</span>
+                <p class="verdict-line" id="verdictLine"></p>
+              </div>
+
+              <dl class="figures">
+                <div><dt>human cost today</dt><dd class="mono" id="oBefore"></dd></div>
+                <div><dt>human cost after</dt><dd class="mono" id="oAfter"></dd></div>
+                <div><dt>agent cost</dt><dd class="mono" id="oAgent"></dd></div>
+                <div class="net"><dt>net monthly savings</dt><dd class="mono" id="oNet"></dd></div>
+                <div class="net"><dt>payback</dt><dd class="mono" id="oPayback"></dd></div>
+                <div><dt>first-year net</dt><dd class="mono" id="oYear"></dd></div>
+              </dl>
+
+              <p class="caption thresholds">justify: saves money and pays back in 6 months or less. marginal: saves money, payback 6 to 18 months. kill: loses money every month, or payback longer than 18 months.</p>
+
+              <div class="row actions">
+                <button type="button" class="pill primary" id="copyMemo">copy memo</button>
+                <button type="button" class="pill" id="reset">reset to preset</button>
+                <span class="caption" id="copyStatus" role="status"></span>
+              </div>
+              <div id="memoFallback" hidden>
+                <label for="memoText">clipboard is blocked here. select all and copy.</label>
+                <textarea id="memoText" rows="10" readonly></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">sensitivity: net monthly savings</p>
+      <p class="caption sens-note">rows move the automation rate; columns multiply the agent cost (usage plus platform fee). your current case is shaded. a minus sign means the agent costs more than it saves.</p>
+      <div class="table-wrap">
+        <table id="sens">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <p class="label">how it's calculated</p>
+      <div class="formulas">
+        <p><span class="mono">human today</span> = tasks × handle min ÷ 60 × cost per hour</p>
+        <p><span class="mono">human after</span> = tasks × (1 − automation) × escalation min ÷ 60 × cost per hour</p>
+        <p><span class="mono">agent, token-based</span> = tasks × (tokens ÷ 1,000,000 × price per million + overhead) + platform fee</p>
+        <p><span class="mono">agent, per resolution</span> = tasks × automation × price per resolution + platform fee</p>
+        <p><span class="mono">net monthly</span> = human today − human after − agent</p>
+        <p><span class="mono">payback months</span> = implementation ÷ net monthly (only when net is above zero)</p>
+        <p><span class="mono">first-year net</span> = net monthly × 12 − implementation</p>
+      </div>
+      <p class="caption">what this leaves out: ramp-up months, quality cost of wrong answers, headcount you cannot actually release, and change management. if the verdict only holds at the top row of the sensitivity table, treat it as a kill.</p>
+    </section>
+
+    <footer class="footer">
+      <ol class="sitemap">
+        <li><a href="./">calculator</a></li>
+        <li><a href="README.md">readme</a></li>
+        <li><a href="ROADMAP.md">roadmap</a></li>
+        <li><a href="CHANGELOG.md">changelog</a></li>
+        <li><a href="https://github.com/ananyapradhan02" target="_blank" rel="noopener">other builds</a></li>
+      </ol>
+      <p class="colophon">set in newsreader, figtree and ibm plex mono. no analytics. © ananya pradhan</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

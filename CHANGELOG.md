@@ -1,0 +1,1 @@
+- v0.1 · 29.09.26 · roi calculator with token and per-resolution pricing, usd/inr, three illustrative presets, verdict stamp, sensitivity table and copy-as-markdown memo

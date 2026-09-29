@@ -1,0 +1,79 @@
+/* agent roi: project rules, tokens only */
+
+.layout {
+  display: grid;
+  gap: var(--s3);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .results { position: relative; }
+}
+
+.presets { margin-bottom: .5rem; }
+.preset-note { margin: 0 0 var(--s2); }
+
+.fields {
+  display: grid;
+  gap: var(--s1);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  margin-bottom: var(--s1);
+}
+.field { min-width: 0; }
+.field input, .field select { font-family: var(--mono); font-size: .95rem; font-variant-numeric: tabular-nums lining-nums; }
+.field select { font-family: var(--sans); }
+.cur { color: var(--text-3); }
+.sublabel {
+  font-size: .85rem;
+  margin: var(--s2) 0 .5rem;
+  text-transform: lowercase;
+}
+.sublabel + .row { margin-bottom: var(--s1); }
+fieldset .caption { margin: 0 0 var(--s1); }
+[hidden] { display: none !important; }
+
+/* results */
+.verdict-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding-bottom: var(--s2);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--s1);
+}
+.verdict-row .stamp { font-size: .9rem; padding: .45em .65em; flex: none; }
+.verdict-line { font-family: var(--serif); font-size: var(--body); line-height: 1.4; margin: 0; }
+
+.figures { margin: 0; }
+.figures > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s1);
+  padding: .55em 0;
+  border-bottom: 1px solid var(--rule);
+}
+.figures dt { font-size: .85rem; color: var(--text-2); }
+.figures dd { margin: 0; font-size: .95rem; text-align: right; }
+.figures .net dt { color: var(--text); font-weight: 600; }
+.figures .net dd { font-size: 1.1rem; font-weight: 500; }
+.thresholds { margin: var(--s1) 0; }
+.actions { margin-top: var(--s1); }
+#memoFallback { margin-top: var(--s1); }
+#memoText { font-family: var(--mono); font-size: .74rem; }
+
+/* sensitivity */
+.sens-note { max-width: 46em; margin: 0 0 var(--s1); }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+#sens { min-width: 30rem; }
+#sens th, #sens td { text-align: right; white-space: nowrap; }
+#sens th:first-child, #sens td:first-child { text-align: left; }
+#sens td.row-head { font-family: var(--mono); font-size: .74rem; color: var(--text-2); }
+#sens td.neg { color: var(--text-3); }
+#sens td.current { background: var(--tint-2); font-weight: 500; }
+#sens tr.current-row td.row-head { color: var(--text); font-weight: 500; }
+
+/* formulas */
+.formulas p { margin: 0 0 .5em; font-size: .9rem; color: var(--text-2); }
+.formulas .mono { color: var(--text); display: inline-block; min-width: 12em; }
