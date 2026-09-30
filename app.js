@@ -28,6 +28,13 @@
     }
   ];
 
+  // url hash: short keys and the largest value each field accepts
+  var LIVE_URL = 'https://ananyapradhan02.github.io/agent-roi/';
+  var KEYS = {
+    volume: ['v', 1e9], handle: ['h', 1440], rate: ['r', 1e7], automation: ['a', 100], escalation: ['e', 1440],
+    tokens: ['t', 1e9], ppm: ['p', 1e7], overhead: ['o', 1e7], perres: ['q', 1e7], platform: ['f', 1e10], impl: ['i', 1e12]
+  };
+
   var state = { preset: PRESETS[0].id, edited: false, currency: 'USD', model: 'token', v: {} };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -154,8 +161,13 @@
     thead.textContent = '';
     tbody.textContent = '';
     var hr = el('tr');
-    var h0 = el('th', null, 'automation'); h0.scope = 'col'; hr.appendChild(h0);
-    MULTS.forEach(function (m) { var th = el('th', null, 'cost ×' + m); th.scope = 'col'; hr.appendChild(th); });
+    var h0 = el('th', null, 'auto'); h0.appendChild(el('span', 'wide-only', 'mation')); h0.scope = 'col'; hr.appendChild(h0);
+    MULTS.forEach(function (m) {
+      var th = el('th'); th.scope = 'col';
+      th.appendChild(el('span', 'wide-only', 'cost '));
+      th.appendChild(document.createTextNode('×' + m));
+      hr.appendChild(th);
+    });
     thead.appendChild(hr);
     sensitivity().forEach(function (r) {
       var isRow = r.auto === cur;
@@ -186,11 +198,79 @@
     $('asof').textContent = today();
     renderSens();
     save();
+    scheduleHash();
+  }
+
+  // ---- scenario in the url hash ----
+  function clampNum(x, max) {
+    var n = parseFloat(x);
+    if (!isFinite(n)) return null;
+    return Math.min(max, Math.max(0, n));
+  }
+
+  function encodeState() {
+    var q = new URLSearchParams();
+    q.set('s', state.preset);
+    if (state.edited) q.set('x', '1');
+    q.set('c', state.currency === 'INR' ? 'inr' : 'usd');
+    q.set('m', state.model === 'resolution' ? 'res' : 'tok');
+    FIELDS.forEach(function (f) {
+      var n = clampNum(state.v[f], KEYS[f][1]);
+      q.set(KEYS[f][0], String(n == null ? 0 : n));
+    });
+    return q.toString();
+  }
+
+  // returns true only if the hash carries a usable scenario; bad values fall back to the preset's
+  function readHash(hash) {
+    var raw = String(hash || '').replace(/^#/, '');
+    if (!raw) return false;
+    var q;
+    try { q = new URLSearchParams(raw); } catch (e) { return false; }
+    var hits = 0;
+    var preset = q.get('s');
+    var known = PRESETS.some(function (p) { return p.id === preset; });
+    if (known) hits++;
+    var p = presetById(preset);
+    var v = {};
+    FIELDS.forEach(function (f) {
+      var n = q.has(KEYS[f][0]) ? clampNum(q.get(KEYS[f][0]), KEYS[f][1]) : null;
+      if (n == null) v[f] = p.v[f]; else { v[f] = n; hits++; }
+    });
+    if (!hits) return false;
+    state.preset = p.id;
+    state.edited = q.get('x') === '1' || !known;
+    var c = q.get('c');
+    state.currency = c === 'inr' ? 'INR' : c === 'usd' ? 'USD' : p.currency;
+    var m = q.get('m');
+    state.model = m === 'res' ? 'resolution' : m === 'tok' ? 'token' : p.model;
+    state.v = v;
+    return true;
+  }
+
+  var hashTimer = null;
+  var lastHash = '';
+  function writeHash() {
+    hashTimer = null;
+    var h = '#' + encodeState();
+    if (h === lastHash && location.hash === h) return;
+    lastHash = h;
+    try { history.replaceState(null, '', h); }
+    catch (e) { try { location.replace(h); } catch (e2) {} }
+  }
+  function scheduleHash() {
+    if (hashTimer) clearTimeout(hashTimer);
+    hashTimer = setTimeout(writeHash, 250);
+  }
+
+  function shareLink() {
+    var base = location.protocol === 'file:' ? LIVE_URL : location.href.split('#')[0];
+    return base + '#' + encodeState();
   }
 
   function scenarioName() {
     var p = presetById(state.preset);
-    return state.edited ? 'custom scenario (started from "' + p.name + '")' : p.name + ' (illustrative preset)';
+    return state.edited ? 'custom scenario (started from "' + p.name + '")' : p.name + ' (preset with round numbers, not a vendor quote)';
   }
 
   function memo() {
@@ -201,6 +281,7 @@
     L.push('');
     L.push('scenario: ' + scenarioName() + '  ');
     L.push('date: ' + today() + '  ');
+    L.push('open this scenario: ' + shareLink() + '  ');
     L.push('verdict: **' + r.verdict.toUpperCase() + '**. ' + verdictLine(r));
     L.push('');
     L.push('## result');
@@ -257,19 +338,26 @@
     return L.join('\n');
   }
 
-  function showFallback(text) {
+  function showFallback(text, label) {
     $('memoFallback').hidden = false;
+    $('memoLabel').textContent = label || 'clipboard is blocked here. select all and copy.';
     var ta = $('memoText');
+    ta.rows = label ? 3 : 10;
     ta.value = text;
     ta.focus();
     ta.select();
     $('copyStatus').textContent = '';
   }
 
-  function copyMemo() {
-    var text = memo();
+  function copyMemo() { copyText(memo(), 'memo copied. paste it into the doc or thread.'); }
+  function copyLink() {
+    copyText(shareLink(), 'link copied. anyone who opens it sees this exact scenario.',
+      'clipboard is blocked here. select the link and copy.');
+  }
+
+  function copyText(text, okMsg, fallbackLabel) {
     var done = function () {
-      $('copyStatus').textContent = 'memo copied. paste it into the doc or thread.';
+      $('copyStatus').textContent = okMsg;
       $('memoFallback').hidden = true;
     };
     var legacy = function () {
@@ -284,7 +372,7 @@
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
       document.body.removeChild(ta);
-      if (ok) done(); else showFallback(text);
+      if (ok) done(); else showFallback(text, fallbackLabel);
     };
     if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(done, legacy);
@@ -347,6 +435,7 @@
   });
   $('inputs').addEventListener('submit', function (e) { e.preventDefault(); });
   $('copyMemo').addEventListener('click', copyMemo);
+  $('copyLink').addEventListener('click', copyLink);
   $('reset').addEventListener('click', function () { applyPreset(state.preset); $('copyStatus').textContent = ''; });
 
   $('theme').addEventListener('click', function () {
@@ -358,8 +447,21 @@
     try { localStorage.setItem('theme', next); } catch (e) {}
   });
 
-  if (load()) { syncForm(); update(); } else { applyPreset(PRESETS[0].id); }
+  // precedence: hash, then this browser's last scenario, then the first preset
+  var hadHash = !!location.hash.replace(/^#/, '');
+  if (readHash(location.hash)) { syncForm(); update(); }
+  else {
+    var had = load();
+    if (had) { syncForm(); update(); } else { applyPreset(PRESETS[0].id); }
+    if (hadHash) $('copyStatus').textContent = 'that link could not be read, so this is ' + (had ? 'your last scenario.' : 'the first preset.');
+  }
+  writeHash();
+
+  window.addEventListener('hashchange', function () {
+    if (location.hash === lastHash) return;
+    if (readHash(location.hash)) { syncForm(); update(); }
+  });
 
   // exposed for tests
-  window.agentRoi = { compute: compute, memo: memo, state: state };
+  window.agentRoi = { compute: compute, memo: memo, state: state, shareLink: shareLink, encode: encodeState };
 })();

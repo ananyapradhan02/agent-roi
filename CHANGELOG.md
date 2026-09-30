@@ -1,1 +1,2 @@
+- v0.2 · 30.09.26 · scenario state in the url hash with copy share link and the link in the memo, sensitivity table fits a phone, 30-minute call and email in the footer, no illustrative banner on the page
 - v0.1 · 29.09.26 · roi calculator with token and per-resolution pricing, usd/inr, three illustrative presets, verdict stamp, sensitivity table and copy-as-markdown memo

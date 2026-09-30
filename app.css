@@ -73,6 +73,16 @@ fieldset .caption { margin: 0 0 var(--s1); }
 #sens td.neg { color: var(--text-3); }
 #sens td.current { background: var(--tint-2); font-weight: 500; }
 #sens tr.current-row td.row-head { color: var(--text); font-weight: 500; }
+@media (max-width: 640px) {
+  #sens { min-width: 0; }
+  #sens th, #sens td { padding: .55em .2em; }
+  #sens th { font-size: .62rem; letter-spacing: .06em; }
+  #sens td.data, #sens td.row-head { font-size: .68rem; }
+  #sens .wide-only { display: none; }
+}
+
+.second-look { margin: var(--s1) 0 0; }
+.second-look a { white-space: nowrap; }
 
 /* formulas */
 .formulas p { margin: 0 0 .5em; font-size: .9rem; color: var(--text-2); }

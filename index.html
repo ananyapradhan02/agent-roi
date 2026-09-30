@@ -34,7 +34,7 @@
         <form id="inputs" class="inputs" autocomplete="off" novalidate>
           <p class="label">start from a preset</p>
           <div class="row presets" id="presets"></div>
-          <p class="caption preset-note">presets are illustrative round numbers, not vendor quotes. replace every value with your own.</p>
+          <p class="caption preset-note">presets are round starting numbers, not vendor quotes. replace every value with your own.</p>
 
           <fieldset>
             <legend>the work today</legend>
@@ -140,13 +140,15 @@
 
               <div class="row actions">
                 <button type="button" class="pill primary" id="copyMemo">copy memo</button>
+                <button type="button" class="pill" id="copyLink">copy share link</button>
                 <button type="button" class="pill" id="reset">reset to preset</button>
                 <span class="caption" id="copyStatus" role="status"></span>
               </div>
               <div id="memoFallback" hidden>
-                <label for="memoText">clipboard is blocked here. select all and copy.</label>
+                <label for="memoText" id="memoLabel">clipboard is blocked here. select all and copy.</label>
                 <textarea id="memoText" rows="10" readonly></textarea>
               </div>
+              <p class="caption second-look">want a second pair of eyes on this case? <a href="https://calendly.com/ananyapradhan/30min" target="_blank" rel="noopener">book a 30-minute call</a></p>
             </div>
           </div>
         </div>
@@ -185,8 +187,10 @@
         <li><a href="ROADMAP.md">roadmap</a></li>
         <li><a href="CHANGELOG.md">changelog</a></li>
         <li><a href="https://github.com/ananyapradhan02" target="_blank" rel="noopener">other builds</a></li>
+        <li><a href="https://calendly.com/ananyapradhan/30min" target="_blank" rel="noopener">book a 30-minute call</a></li>
+        <li><a href="mailto:ananyapradhan02@gmail.com">write to ananya</a></li>
       </ol>
-      <p class="colophon">set in newsreader, figtree and ibm plex mono. no analytics. © ananya pradhan</p>
+      <p class="colophon">v0.2 · 30.09.26 · set in newsreader, figtree and ibm plex mono. no analytics. © ananya pradhan</p>
     </footer>
   </div>
   <script src="app.js"></script>
